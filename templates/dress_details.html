@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ dress.name }} - Elegant Dresses</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .dress-main-image {
+            max-height: 600px;
+            object-fit: contain;
+            width: 100%;
+        }
+        .size-btn {
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #2c3e50;
+            background: white;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+        }
+        .size-btn:hover, .size-btn.active {
+            background: #2c3e50;
+            color: white;
+        }
+        .color-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #ccc;
+            transition: transform 0.3s ease;
+        }
+        .color-circle:hover {
+            transform: scale(1.1);
+        }
+        .related-dress-card {
+            transition: transform 0.3s ease;
+        }
+        .related-dress-card:hover {
+            transform: translateY(-5px);
+        }
+        .related-dress-image {
+            height: 300px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Elegant Dresses</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/collection">Collection</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">My Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">Register</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dress Details Section -->
+    <div class="container my-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Dress Image -->
+            <div class="col-md-6 mb-4">
+                <img src="{{ url_for('static', filename='images/' + dress.image) }}" 
+                     class="dress-main-image" 
+                     alt="{{ dress.name }}">
+            </div>
+            
+            <!-- Dress Information -->
+            <div class="col-md-6">
+                <h1 class="mb-3">{{ dress.name }}</h1>
+                <p class="h2 text-primary mb-4">${{ "%.2f"|format(dress.price) }}</p>
+                
+                <p class="mb-4">{{ dress.description }}</p>
+                
+                <div class="mb-4">
+                    <h5>Material</h5>
+                    <p>{{ dress.material }}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h5>Select Size</h5>
+                    <div class="d-flex flex-wrap">
+                        {% for size in dress.sizes %}
+                        <button type="button" class="size-btn" data-size="{{ size }}">{{ size }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h5>Available Colors</h5>
+                    <div class="d-flex flex-wrap align-items-center">
+                        {% for color in dress.available_colors %}
+                        <div class="color-circle" 
+                             style="background-color: {{ color.lower().replace(' ', '') }};"
+                             title="{{ color }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    {% if current_user.is_authenticated %}
+                        <form action="{{ url_for('add_to_cart', image_name=dress.image) }}" method="POST" id="cartForm">
+                            <input type="hidden" name="size" id="selected_size" value="">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg mb-2" id="addToCartBtn" disabled>Add to Cart</button>
+                            </div>
+                        </form>
+                        <form action="{{ url_for('add_to_wishlist', image_name=dress.image) }}" method="POST">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-primary btn-lg">Add to Wishlist</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg mb-2">Login to Add to Cart</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login to Add to Wishlist</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Dresses -->
+    <div class="container mb-5">
+        <h3 class="mb-4">You May Also Like</h3>
+        <div class="row">
+            {% for related in related_dresses %}
+            <div class="col-md-3 mb-4">
+                <div class="card related-dress-card">
+                    <img src="{{ url_for('static', filename='images/' + related.image) }}" 
+                         class="card-img-top related-dress-image" 
+                         alt="{{ related.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ related.name }}</h5>
+                        <p class="card-text">${{ "%.2f"|format(related.price) }}</p>
+                        <a href="{{ url_for('dress_details', image_name=related.image) }}" 
+                           class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2024 Elegant Dresses. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="#" class="text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-decoration-none">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Size selection
+        const sizeBtns = document.querySelectorAll('.size-btn');
+        const selectedSizeInput = document.getElementById('selected_size');
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        
+        sizeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                sizeBtns.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+                // Update hidden input with selected size
+                selectedSizeInput.value = btn.getAttribute('data-size');
+                // Enable the Add to Cart button
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = false;
+                }
+            });
+        });
+
+        // Auto-hide alerts after 5 seconds
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }, 5000);
+        });
+    </script>
+</body>
+</html> 

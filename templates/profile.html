@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Elegant Dresses</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .profile-header {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../static/images/hero-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+        .cart-image, .wishlist-image {
+            height: 150px;
+            object-fit: cover;
+        }
+        .item-card {
+            transition: transform 0.3s ease;
+        }
+        .item-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Elegant Dresses</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/collection">Collection</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/profile">My Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Header -->
+    <header class="profile-header">
+        <div class="container text-center">
+            <h1 class="display-4">Welcome, {{ current_user.name }}!</h1>
+            <p class="lead">Manage your shopping cart and wishlist</p>
+        </div>
+    </header>
+
+    <!-- Profile Content -->
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Shopping Cart -->
+        <section class="mb-5">
+            <h2 class="mb-4">Shopping Cart</h2>
+            {% if cart_items %}
+            <div class="row">
+                {% for item, dress in cart_items %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card item-card">
+                        <img src="{{ url_for('static', filename='images/' + dress.image) }}" 
+                             class="card-img-top cart-image" 
+                             alt="{{ dress.name }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ dress.name }}</h5>
+                            <p class="card-text">
+                                Size: {{ item.size }}<br>
+                                Quantity: {{ item.quantity }}<br>
+                                Price: ${{ "%.2f"|format(dress.price) }}
+                            </p>
+                            <form action="{{ url_for('remove_from_cart', item_id=item.id) }}" method="POST">
+                                <button type="submit" class="btn btn-danger">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-end mb-4">
+                <h4>Total: ${{ "%.2f"|format(cart_items|sum(attribute='1.price')) }}</h4>
+                <button class="btn btn-primary btn-lg">Proceed to Checkout</button>
+            </div>
+            {% else %}
+            <p>Your cart is empty. <a href="{{ url_for('collection') }}">Browse our collection</a></p>
+            {% endif %}
+        </section>
+
+        <!-- Wishlist -->
+        <section class="mb-5">
+            <h2 class="mb-4">Wishlist</h2>
+            {% if wishlist_items %}
+            <div class="row">
+                {% for item, dress in wishlist_items %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card item-card">
+                        <img src="{{ url_for('static', filename='images/' + dress.image) }}" 
+                             class="card-img-top wishlist-image" 
+                             alt="{{ dress.name }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ dress.name }}</h5>
+                            <p class="card-text">Price: ${{ "%.2f"|format(dress.price) }}</p>
+                            <div class="d-flex justify-content-between">
+                                <form action="{{ url_for('remove_from_wishlist', item_id=item.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-danger">Remove</button>
+                                </form>
+                                <a href="{{ url_for('dress_details', image_name=dress.image) }}" 
+                                   class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>Your wishlist is empty. <a href="{{ url_for('collection') }}">Browse our collection</a></p>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2024 Elegant Dresses. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="#" class="text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-decoration-none">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
